@@ -363,15 +363,16 @@ def startup_event():
 
 # ==================== API Endpoints ====================
 
-@app.get("/")
-def root():
-    return {"message": "Bayer Press Team Impact Dashboard API", "version": "1.0.0"}
-
-
 @app.get("/health")
 def health_check():
     """Health check endpoint for Docker and monitoring"""
     return {"status": "healthy", "version": "1.0.0"}
+
+
+@app.get("/api")
+def api_root():
+    """API root endpoint - returns API info"""
+    return {"message": "Bayer Press Team Impact Dashboard API", "version": "1.0.0"}
 
 
 @app.post("/api/admin/reseed")

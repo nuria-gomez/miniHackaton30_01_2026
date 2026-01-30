@@ -9,15 +9,16 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Copiar requirements y instalar dependencias Python
-COPY requirements.txt .
+COPY backend/requirements.txt .
+
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
 
 # Copiar código de la aplicación backend
-COPY *.py ./
+COPY backend/*.py ./
 
 # Copiar frontend dist (construido previamente y copiado a backend/dist)
-COPY dist ./dist
+COPY backend/dist ./dist
 
 # Crear directorio para uploads con permisos correctos
 RUN mkdir -p /app/uploads && chmod 755 /app/uploads
