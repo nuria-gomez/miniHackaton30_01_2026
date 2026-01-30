@@ -369,12 +369,6 @@ def health_check():
     return {"status": "healthy", "version": "1.0.0"}
 
 
-@app.get("/api")
-def api_root():
-    """API root endpoint - returns API info"""
-    return {"message": "Bayer Press Team Impact Dashboard API", "version": "1.0.0"}
-
-
 @app.post("/api/admin/reseed")
 def reseed_database(db: Session = Depends(get_db)):
     """Force reseed the database with fresh mock data (admin only)"""
@@ -579,22 +573,34 @@ import os.path
 if os.path.exists("dist/assets"):
     app.mount("/assets", StaticFiles(directory="dist/assets"), name="assets")
 
-# Catch-all route for SPA (must be at the end)
+# Root endpoint - serve index.html
+@app.get("/")
+async def serve_root():
+    """Serve the main React app"""
+    if os.path.exists("dist/index.html"):
+        return FileResponse("dist/index.html")
+    return {"error": "Frontend not found. Build required."}
+
+# Catch-all route for SPA (must be at the end, after all API routes)
 @app.get("/{full_path:path}")
 async def serve_spa(full_path: str):
     """Serve React SPA for all non-API routes"""
-    # If dist doesn't exist, return message
+    # Skip API routes (they're handled above)
+    if full_path.startswith("api/"):
+        raise HTTPException(status_code=404, detail="API endpoint not found")
+    
+    # If dist doesn't exist, return error message
     if not os.path.exists("dist"):
-        return {"message": "Frontend not built. Run 'npm run build' in frontend and copy dist/ to backend/"}
+        return {"error": "Frontend not built. Run build script first."}
     
     # If file exists in dist, serve it
     file_path = os.path.join("dist", full_path)
     if os.path.isfile(file_path):
         return FileResponse(file_path)
     
-    # Otherwise serve index.html (SPA routing)
+    # For root path or any other path, serve index.html (SPA routing)
     index_path = "dist/index.html"
     if os.path.exists(index_path):
         return FileResponse(index_path)
     
-    return {"message": "Frontend not found"}
+    return {"error": "Frontend index.html not found"}
